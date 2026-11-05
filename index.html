@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patient Log</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4a3a86">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Patient Log">
+<style>
+  :root{
+    --ink:#1a1526;
+    --ink-soft:#463a5c;
+    --paper:#efedf7;
+    --card:#ffffff;
+    --line:#e2ddf0;
+    --pine:#4a3a86;
+    --pine-light:#6a54b8;
+    --amber:#e0a23f;
+    --amber-deep:#b8791f;
+    --muted:#8a80a3;
+    --danger-soft:#f6efe6;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(110,70,184,0.4), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(74,46,131,0.42), transparent 50%),
+      linear-gradient(160deg,#100a1c 0%,#1c1330 55%,#150e26 100%);
+    color:var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .wrap{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    background:transparent;
+    position:relative;
+  }
+  header{
+    padding:22px 20px 20px;
+    background: linear-gradient(155deg, var(--pine) 0%, #16342567 100%), var(--pine);
+    background-color:var(--pine);
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  header::after{
+    content:"";
+    position:absolute;
+    right:-40px; top:-60px;
+    width:180px; height:180px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.06);
+  }
+  .brand-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    position:relative;
+    z-index:1;
+  }
+  .brand-badge{
+    width:44px; height:44px;
+    border-radius:13px;
+    background:rgba(255,255,255,0.16);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:17px;
+    flex-shrink:0;
+    border:1px solid rgba(255,255,255,0.22);
+  }
+  .brand-label{
+    font-size:12px;
+    letter-spacing:0.04em;
+    color:rgba(255,255,255,0.65);
+    margin:0 0 2px;
+    text-transform:uppercase;
+  }
+  h1{
+    font-size:20px;
+    line-height:1.2;
+    margin:0;
+    font-weight:700;
+    color:#fff;
+  }
+  main{
+    flex:1;
+    padding:18px 18px 100px;
+  }
+  /* ---- Add Customer form ---- */
+  .form-card{
+    background:rgba(255,255,255,0.82);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border-radius:20px;
+    padding:20px 18px 22px;
+    box-shadow:0 20px 44px -22px rgba(30,15,60,0.45), inset 0 1px 0 rgba(255,255,255,0.7);
+    border:1px solid rgba(255,255,255,0.6);
+  }
+  .field{ margin-bottom:15px; }
+  label{
+    display:block;
+    font-size:12.5px;
+    font-weight:700;
+    margin-bottom:6px;
+    color:var(--ink-soft);
+    letter-spacing:0.01em;
+  }
+  input{
+    width:100%;
+    padding:13px 14px;
+    border:1.5px solid rgba(160,140,200,0.35);
+    border-radius:11px;
+    font-size:15px;
+    background:rgba(255,255,255,0.7);
+    color:var(--ink);
+    font-family:inherit;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  input:focus{
+    outline:none;
+    border-color:var(--pine-light);
+    background:#fff;
+  }
+  .submit-btn{
+    width:100%;
+    padding:15px;
+    margin-top:8px;
+    background:linear-gradient(135deg, var(--pine-light) 0%, var(--pine) 100%);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    font-size:15.5px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 14px 30px -10px rgba(74,46,131,0.6);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .submit-btn:active{ transform:scale(0.98); box-shadow:0 4px 10px -6px rgba(31,77,58,0.5); }
+  .toast{
+    margin-top:14px;
+    padding:12px 14px;
+    background:#eaf4ec;
+    border:1px solid #c9e3cd;
+    border-radius:12px;
+    font-size:13.5px;
+    color:var(--pine);
+    font-weight:600;
+    display:none;
+    align-items:center;
+    gap:8px;
+  }
+  .toast.show{ display:flex; }
+  .toast.error{ background:#fbeeee; border-color:#efc9c9; color:#8a2c2c; }
+  .toast-icon{ display:inline-flex; font-weight:800; }
+  /* ---- Stats strip ---- */
+  .stats-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .stat-pill{
+    flex:1;
+    background:rgba(255,255,255,0.78);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,0.6);
+    border-radius:16px;
+    padding:13px 14px;
+    box-shadow:0 16px 34px -20px rgba(30,15,60,0.4), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .stat-num{
+    font-size:21px;
+    font-weight:800;
+    color:var(--pine);
+    line-height:1;
+  }
+  .stat-label{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:4px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  /* ---- Customer list ---- */
+  .list-empty{
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    padding:70px 24px;
+    line-height:1.6;
+    background:rgba(255,255,255,0.78);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,0.6);
+    border-radius:20px;
+    box-shadow:0 16px 34px -20px rgba(30,15,60,0.35);
+  }
+  .list-empty-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 14px;
+    color:var(--violet-light);
+    opacity:0.55;
+  }
+  .row{
+    background:rgba(255,255,255,0.8);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,0.6);
+    border-radius:16px;
+    padding:14px 15px;
+    margin-bottom:10px;
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    box-shadow:0 16px 34px -22px rgba(30,15,60,0.38), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .avatar{
+    width:42px; height:42px;
+    border-radius:12px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:15px;
+    color:#fff;
+  }
+  .row-body{ flex:1; min-width:0; }
+  .row-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+  }
+  .row-name{
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .row-date{
+    font-size:11.5px;
+    color:var(--amber-deep);
+    font-weight:700;
+    white-space:nowrap;
+    flex-shrink:0;
+    background:#fbf1de;
+    padding:3px 9px;
+    border-radius:7px;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+  }
+  .row-meta{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:3px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:x;
+    row-gap:2px;
+  }
+  .row-meta span{ display:inline-flex; align-items:center; gap:5px; margin-right:12px; }
+  .meta-icon{ display:inline-flex; color:var(--violet-light); opacity:0.85; }
+  /* ---- Bottom nav ---- */
+  .bottom-nav{
+    position:relative;
+    width:calc(100% - 36px);
+    max-width:460px;
+    margin:14px auto 0;
+    background:var(--ink);
+    border-radius:20px;
+    display:flex;
+    padding:7px;
+    gap:4px;
+    box-shadow:0 14px 30px -10px rgba(0,0,0,0.35);
+    z-index:10;
+  }
+  .bottom-nav button{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    padding:9px 6px;
+    background:none;
+    border:none;
+    color:rgba(255,255,255,0.55);
+    font-size:11px;
+    font-weight:600;
+    border-radius:14px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .bottom-nav button .icon{ display:flex; }
+  .bottom-nav button .icon svg{ display:block; }
+  .bottom-nav button.active{
+    background:rgba(255,255,255,0.12);
+    color:#fff;
+  }
+  .app-shell{ display:block; position:relative; }
+  .mobile-nav-wrap{ display:block; }
+  .sidebar{ display:none; }
+  .content-col{ display:block; position:relative; }
+  .glow-orb{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(60px);
+    pointer-events:none;
+    z-index:0;
+  }
+  .glow-orb.a{ width:220px; height:220px; top:-40px; right:-30px; background:rgba(110,70,184,0.3); }
+  .glow-orb.b{ width:200px; height:200px; bottom:10%; left:-40px; background:rgba(74,46,131,0.28); }
+  main{ position:relative; z-index:1; }
+
+  /* Mobile: keep the navigation above the form so it is immediately visible.
+     The page background stays consistent on both sides of the content. */
+  @media (max-width:859px){
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(110,70,184,0.4), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(74,46,131,0.42), transparent 50%),
+        linear-gradient(160deg,#100a1c 0%,#1c1330 55%,#150e26 100%);
+    }
+    .wrap{ min-height:100vh; background:transparent; }
+    .bottom-nav{ margin:14px auto 0; }
+    main{ padding:14px 18px 24px; }
+    .form-card{ background:rgba(255,255,255,0.88); }
+  }
+
+  @media (min-width:860px){
+    html,body{
+      background:
+        radial-gradient(circle at 15% 20%, rgba(110,70,184,0.35), transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(74,46,131,0.4), transparent 50%),
+        linear-gradient(160deg,#100a1c 0%,#1c1330 55%,#150e26 100%);
+    }
+    .wrap{
+      max-width:none;
+      width:100%;
+      min-height:100vh;
+      background:transparent;
+      box-shadow:none;
+    }
+    .mobile-header{ display:none; }
+    .mobile-nav-wrap{ display:none; }
+    .bottom-nav{ display:none; }
+    .app-shell{
+      display:flex;
+      min-height:100vh;
+    }
+    .sidebar{
+      display:flex;
+      flex-direction:column;
+      width:270px;
+      flex-shrink:0;
+      background:linear-gradient(165deg, rgba(74,46,131,0.55) 0%, rgba(28,19,48,0.55) 130%);
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+      border-right:1px solid rgba(255,255,255,0.08);
+      padding:34px 22px;
+      gap:38px;
+      position:relative;
+    }
+    .sidebar::after{
+      content:"";
+      position:absolute; inset:0;
+      background:linear-gradient(180deg, rgba(255,255,255,0.05), transparent 40%);
+      pointer-events:none;
+    }
+    .sidebar-brand{ display:flex; align-items:center; gap:12px; position:relative; z-index:1; }
+    .sidebar-brand .brand-badge{ background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.2); }
+    .sidebar-brand h1{ color:#fff; font-size:17px; }
+    .sidebar-brand .brand-label{ color:rgba(255,255,255,0.55); }
+    .sidebar-nav{ display:flex; flex-direction:column; gap:6px; position:relative; z-index:1; }
+    .sidebar-nav button{
+      display:flex; align-items:center; gap:12px;
+      padding:12px 14px;
+      background:none; border:1px solid transparent;
+      color:rgba(255,255,255,0.55);
+      font-size:14.5px; font-weight:600;
+      border-radius:13px; cursor:pointer;
+      text-align:left;
+      transition:background .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .sidebar-nav button:hover{ background:rgba(255,255,255,0.07); color:#fff; }
+    .sidebar-nav button.active{
+      background:rgba(255,255,255,0.12);
+      border-color:rgba(255,255,255,0.18);
+      color:#fff;
+      box-shadow:0 4px 16px -6px rgba(0,0,0,0.4);
+    }
+    .content-col{
+      flex:1;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      padding:64px 48px;
+      overflow-y:auto;
+      position:relative;
+    }
+    .glow-orb{
+      position:absolute;
+      border-radius:50%;
+      filter:blur(70px);
+      pointer-events:none;
+      z-index:0;
+    }
+    .glow-orb.a{ width:340px; height:340px; top:-80px; right:8%; background:rgba(110,70,184,0.35); }
+    .glow-orb.b{ width:280px; height:280px; bottom:5%; left:8%; background:rgba(74,46,131,0.3); }
+    main{ max-width:680px; width:100%; padding:0; margin:0; position:relative; z-index:1; }
+    .form-card{
+      padding:38px 40px 42px;
+      border-radius:24px;
+      background:rgba(255,255,255,0.85);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      border:1px solid rgba(255,255,255,0.6);
+      box-shadow:0 30px 60px -20px rgba(30,15,60,0.45), inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+    .field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+    input{
+      background:rgba(255,255,255,0.7);
+      border-color:rgba(160,140,200,0.35);
+    }
+    input:focus{ background:#fff; }
+    .submit-btn{
+      background:linear-gradient(135deg, var(--pine-light) 0%, var(--pine) 100%);
+      box-shadow:0 14px 30px -10px rgba(74,46,131,0.6);
+    }
+    .stats-row{ max-width:680px; gap:14px; }
+    .stat-pill{
+      background:rgba(255,255,255,0.8);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(255,255,255,0.6);
+      box-shadow:0 16px 34px -18px rgba(30,15,60,0.4), inset 0 1px 0 rgba(255,255,255,0.7);
+      border-radius:16px;
+    }
+    .row-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .row{
+      padding:17px 19px;
+      margin-bottom:0;
+      background:rgba(255,255,255,0.8);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(255,255,255,0.6);
+      box-shadow:0 16px 34px -20px rgba(30,15,60,0.35), inset 0 1px 0 rgba(255,255,255,0.7);
+      border-radius:18px;
+    }
+    .list-empty{
+      background:rgba(255,255,255,0.8);
+      backdrop-filter:blur(16px);
+      border:1px solid rgba(255,255,255,0.6);
+      border-radius:20px;
+      box-shadow:0 16px 34px -20px rgba(30,15,60,0.35);
+    }
+  }
+  .setup-inner{
+    padding:44px 24px;
+  }
+  code{
+    background:rgba(0,0,0,0.06);
+    padding:2px 6px;
+    border-radius:5px;
+    font-size:12.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+  var app = document.getElementById('app');
+
+  var AVATAR_COLORS = ['#1f4d3a','#c97f1f','#5b6bb0','#b0555b','#6b8a3a','#8a5bb0'];
+  function colorFor(str){
+    var h = 0;
+    for(var i=0;i<str.length;i++){ h = str.charCodeAt(i) + ((h<<5)-h); }
+    return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+  }
+  function initials(name){
+    var parts = name.trim().split(/\s+/);
+    return ((parts[0]||'')[0]||'').toUpperCase() + ((parts[1]||'')[0]||'').toUpperCase();
+  }
+
+  var ICONS = {
+    plus: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    list: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+    inbox: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+    phone: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+    mail: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2.5"/><path d="m22 6-10 7L2 6"/></svg>',
+    wave: '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>',
+    check: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    calendar: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+    tag: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.17L4 3a1 1 0 0 0-1 1l.17 5.59a2 2 0 0 0 .66 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></svg>'
+  };
+
+  var SUPABASE_URL = 'https://rucwjtqlvusjkfpuxlfw.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_Nm9Vx46i_mS0phsNXSmLBA_40mp4YF2';
+
+  function getLS(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function setLS(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+  function delLS(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+  // Every database call goes through a token-checked function. The tables
+  // themselves are locked, so the token in the link is the only way in.
+  function rpc(fn, body){
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function(res){
+      return res.text().then(function(text){
+        var data = null;
+        try{ data = text ? JSON.parse(text) : null; }catch(e){}
+        if(!res.ok){
+          var err = new Error((data && (data.message || data.error)) || 'Request failed');
+          err.status = res.status;
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  var token = (params.get('t') || '').trim();
+  if(token){ setLS('patientlog_token', token); }
+  else { token = getLS('patientlog_token') || ''; }
+
+  var displayName = getLS('patientlog_clinic_name') || '';
+  var activeTab = 'submit';
+  var patients = null;
+  var loadError = '';
+  var shellShown = false;
+  var toastTimer = null;
+
+  // Makes the home-screen icon reopen the app with this clinic's token in the link.
+  function setDynamicManifest(){
+    try{
+      var base = location.origin + location.pathname.replace(/[^\/]*$/, '');
+      var manifest = {
+        name: 'Patient Log', short_name: 'Patient Log',
+        start_url: base + '?t=' + encodeURIComponent(token),
+        scope: base,
+        display: 'standalone', orientation: 'portrait',
+        background_color: '#150e26', theme_color: '#4a3a86',
+        icons: [
+          { src: base + 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: base + 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
+        ]
+      };
+      var blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      var link = document.querySelector('link[rel="manifest"]');
+      if(link) link.setAttribute('href', URL.createObjectURL(blob));
+    }catch(e){}
+  }
+
+  function todayISO(){
+    var d = new Date();
+    function p(n){ return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  function normalizeIndianPhone(raw){
+    var digits = raw.replace(/\D/g, '');
+    if(digits.length === 12 && digits.indexOf('91') === 0) digits = digits.slice(2);
+    if(digits.length === 11 && digits.indexOf('0') === 0) digits = digits.slice(1);
+    if(digits.length !== 10) return null;
+    return '+91' + digits;
+  }
+
+  function errorMessage(err){
+    var m = ((err && err.message) || '').toLowerCase();
+    if(m.indexOf('invalid token') !== -1) return 'This link is no longer valid. Ask for a new one.';
+    if((err instanceof TypeError) || m.indexOf('failed to fetch') !== -1 || m.indexOf('network') !== -1){
+      return 'No internet connection. Patient not saved.';
+    }
+    return 'Could not save. Please try again.';
+  }
+
+  function renderMessage(title, body){
+    shellShown = false;
+    app.innerHTML =
+      '<div class="setup">' +
+        '<header style="padding-bottom:44px;"><div class="brand-row"><div class="brand-badge">' + ICONS.wave + '</div><div><p class="brand-label">Patient Log</p><h1>' + escapeHtml(title) + '</h1></div></div></header>' +
+        '<div class="setup-inner" style="margin-top:-26px;"><div class="form-card"><p style="margin:0;font-size:14.5px;line-height:1.6;color:var(--ink-soft);">' + escapeHtml(body) + '</p></div></div>' +
+      '</div>';
+  }
+
+  function render(){
+    shellShown = true;
+    app.innerHTML =
+      '<header class="mobile-header">' +
+        '<div class="brand-row">' +
+          '<div class="brand-badge">' + escapeHtml(initials(displayName) || '•') + '</div>' +
+          '<div><p class="brand-label">Patient Log</p><h1>' + escapeHtml(displayName) + '</h1></div>' +
+        '</div>' +
+      '</header>' +
+      '<div class="app-shell">' +
+        '<aside class="sidebar">' +
+          '<div class="sidebar-brand">' +
+            '<div class="brand-badge">' + escapeHtml(initials(displayName) || '•') + '</div>' +
+            '<div><p class="brand-label">Patient Log</p><h1>' + escapeHtml(displayName) + '</h1></div>' +
+          '</div>' +
+          '<nav class="sidebar-nav">' +
+            '<button data-tab="submit" class="' + (activeTab==='submit'?'active':'') + '"><span class="icon">' + ICONS.plus + '</span>Add Patient</button>' +
+            '<button data-tab="list" class="' + (activeTab==='list'?'active':'') + '"><span class="icon">' + ICONS.list + '</span>Patient List</button>' +
+          '</nav>' +
+        '</aside>' +
+        '<div class="mobile-nav-wrap">' +
+          '<div class="bottom-nav">' +
+            '<button data-tab="submit" class="' + (activeTab==='submit'?'active':'') + '"><span class="icon">' + ICONS.plus + '</span>Add Patient</button>' +
+            '<button data-tab="list" class="' + (activeTab==='list'?'active':'') + '"><span class="icon">' + ICONS.list + '</span>Patient List</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="content-col"><div class="glow-orb a"></div><div class="glow-orb b"></div><main id="main"></main></div>' +
+      '</div>';
+
+    document.querySelectorAll('[data-tab]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        activeTab = btn.getAttribute('data-tab');
+        render();
+      });
+    });
+
+    if(activeTab === 'submit') renderSubmit();
+    else { renderList(); loadPatients(); }
+  }
+
+  function showToast(text, isError){
+    var toast = document.getElementById('f-toast');
+    if(!toast) return;
+    toast.classList.toggle('error', !!isError);
+    toast.querySelector('.toast-icon').innerHTML = isError ? '!' : ICONS.check;
+    toast.querySelector('.toast-text').textContent = text;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, isError ? 5000 : 2500);
+  }
+
+  function renderSubmit(){
+    var main = document.getElementById('main');
+    main.innerHTML =
+      '<div class="form-card">' +
+        '<div class="field-grid">' +
+        '<div class="field"><label for="f-name">Patient name</label><input id="f-name" type="text" placeholder="e.g. Priya Sharma" autocomplete="off"></div>' +
+        '<div class="field"><label for="f-phone">Phone number</label><input id="f-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="e.g. 98765 43210" autocomplete="off"></div>' +
+        '</div>' +
+        '<div class="field-grid">' +
+        '<div class="field"><label for="f-treatment">Treatment</label><input id="f-treatment" type="text" placeholder="e.g. Root Canal, Cleaning" autocomplete="off"></div>' +
+        '<div class="field"><label for="f-date">Visit date</label><input id="f-date" type="date"></div>' +
+        '</div>' +
+        '<button class="submit-btn" id="f-submit">Add Patient</button>' +
+        '<div class="toast" id="f-toast"><span class="toast-icon"></span><span class="toast-text"></span></div>' +
+      '</div>';
+
+    var dateInput = document.getElementById('f-date');
+    dateInput.value = todayISO();
+
+    var btn = document.getElementById('f-submit');
+    btn.addEventListener('click', function(){
+      var name = document.getElementById('f-name').value.trim();
+      var phoneRaw = document.getElementById('f-phone').value.trim();
+      var treatment = document.getElementById('f-treatment').value.trim();
+      var date = document.getElementById('f-date').value;
+
+      if(!name || !phoneRaw || !date){ alert('Please fill in name, phone, and visit date.'); return; }
+      var phone = normalizeIndianPhone(phoneRaw);
+      if(!phone){ alert('Please enter a valid 10-digit phone number.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      rpc('add_patient', {
+        p_token: token, p_name: name, p_phone: phone,
+        p_treatment: treatment || null, p_visit_date: date
+      }).then(function(){
+        var n = document.getElementById('f-name');
+        if(n){
+          n.value = '';
+          document.getElementById('f-phone').value = '';
+          document.getElementById('f-treatment').value = '';
+          document.getElementById('f-date').value = todayISO();
+        }
+        showToast('Patient saved', false);
+      }).catch(function(err){
+        showToast(errorMessage(err), true);
+      }).then(function(){
+        btn.disabled = false;
+        btn.textContent = 'Add Patient';
+      });
+    });
+  }
+
+  function loadPatients(){
+    rpc('list_patients', { p_token: token }).then(function(rows){
+      patients = Array.isArray(rows) ? rows : [];
+      loadError = '';
+    }).catch(function(){
+      if(patients === null) loadError = 'Couldn’t load patients. Check your connection and try again.';
+    }).then(function(){
+      if(activeTab === 'list') renderList();
+    });
+  }
+
+  function renderList(){
+    var main = document.getElementById('main');
+    if(!main) return;
+
+    if(patients === null){
+      if(loadError){
+        main.innerHTML = '<div class="list-empty">' + escapeHtml(loadError) + '<br><br><button class="submit-btn" id="retry" style="max-width:200px;margin:0 auto;">Try again</button></div>';
+        document.getElementById('retry').addEventListener('click', function(){
+          loadError = '';
+          renderList();
+          loadPatients();
+        });
+      } else {
+        main.innerHTML = '<div class="list-empty">Loading patients…</div>';
+      }
+      return;
+    }
+
+    var now = new Date();
+    var thisMonth = patients.filter(function(c){
+      var d = new Date(c.visit_date + 'T00:00:00');
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+
+    var statsHtml =
+      '<div class="stats-row">' +
+        '<div class="stat-pill"><div class="stat-num">' + patients.length + '</div><div class="stat-label">Total logged</div></div>' +
+        '<div class="stat-pill"><div class="stat-num">' + thisMonth + '</div><div class="stat-label">This month</div></div>' +
+      '</div>';
+
+    if(patients.length === 0){
+      main.innerHTML = statsHtml + '<div class="list-empty"><div class="list-empty-icon">' + ICONS.inbox + '</div>No patients added yet.<br>Use “Add Patient” after their next visit.</div>';
+      return;
+    }
+
+    var rows = patients.map(function(c){
+      var metaParts = ['<span class="meta-icon">' + ICONS.phone + '</span>' + escapeHtml(c.phone)];
+      if(c.treatment) metaParts.push('<span class="meta-icon">' + ICONS.tag + '</span>' + escapeHtml(c.treatment));
+      return '<div class="row">' +
+        '<div class="avatar" style="background:' + colorFor(c.name) + '">' + escapeHtml(initials(c.name)) + '</div>' +
+        '<div class="row-body">' +
+          '<div class="row-top"><div class="row-name">' + escapeHtml(c.name) + '</div><div class="row-date">' + ICONS.calendar + formatDate(c.visit_date) + '</div></div>' +
+          '<div class="row-meta">' + metaParts.map(function(m){ return '<span>' + m + '</span>'; }).join('') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    main.innerHTML = statsHtml + '<div class="row-grid">' + rows + '</div>';
+  }
+
+  function formatDate(iso){
+    if(!iso) return '—';
+    var d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  }
+  function escapeHtml(s){
+    var d = document.createElement('div');
+    d.textContent = s == null ? '' : s;
+    return d.innerHTML;
+  }
+
+  function boot(){
+    if(!token){
+      renderMessage('Open your clinic’s link', 'This app needs the personal link your clinic was given. Open that link once and it will remember you.');
+      return;
+    }
+    setDynamicManifest();
+    if(displayName) render();
+    else renderMessage('Loading…', 'One moment.');
+
+    rpc('get_clinic_name', { p_token: token }).then(function(name){
+      if(!name){
+        delLS('patientlog_token');
+        delLS('patientlog_clinic_name');
+        token = '';
+        renderMessage('This link isn’t valid', 'Ask for your clinic’s current link.');
+        return;
+      }
+      var changed = (name !== displayName);
+      displayName = name;
+      setLS('patientlog_clinic_name', name);
+      if(changed || !shellShown) render();
+    }).catch(function(){
+      if(!shellShown){ displayName = displayName || 'Patient Log'; render(); }
+    });
+  }
+
+  boot();
+})();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('service-worker.js').catch(function(err){
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>

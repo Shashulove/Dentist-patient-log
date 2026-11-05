@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patient Log — Admin</title>
+<meta name="theme-color" content="#4a3a86">
+<style>
+:root{--ink:#1a1526;--muted:#756b86;--paper:#f4f1fa;--card:#fff;--line:#e3def0;--purple:#5b3fb1;--purple2:#7a55d4;--danger:#b42318;--ok:#18794e;}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(135deg,#211735 0%,#3c2460 48%,#211735 100%)}
+body{padding:24px}.wrap{max-width:1180px;margin:0 auto}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;color:#fff;margin-bottom:20px}.brand{display:flex;align-items:center;gap:14px}.badge{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-weight:800;font-size:20px;border:1px solid rgba(255,255,255,.2)}.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.72}.title{font-size:28px;font-weight:800;margin:2px 0}.btn{border:0;border-radius:12px;padding:11px 15px;font-weight:700;cursor:pointer}.btn.primary{background:linear-gradient(135deg,var(--purple2),var(--purple));color:#fff}.btn.light{background:#fff;color:#3c2b64}.btn.danger{background:#fff0ef;color:var(--danger)}
+.card{background:rgba(255,255,255,.97);border:1px solid rgba(255,255,255,.45);border-radius:22px;padding:20px;box-shadow:0 18px 60px rgba(12,5,28,.22)}.login{max-width:430px;margin:8vh auto}.login h1{margin:0 0 8px}.muted{color:var(--muted);font-size:14px;line-height:1.5}.field{margin:16px 0}.field label{display:block;font-weight:700;font-size:13px;margin-bottom:7px}.field input,.field select{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#faf9fd;font:inherit;outline:none}.field input:focus,.field select:focus{border-color:#9d83d7;box-shadow:0 0 0 3px #9d83d722}.error{background:#fff0ef;color:var(--danger);padding:10px 12px;border-radius:10px;margin:12px 0;font-size:13px;display:none}.hidden{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}.stat{background:rgba(255,255,255,.97);border-radius:18px;padding:18px}.stat .num{font-size:28px;font-weight:800}.stat .lbl{color:var(--muted);font-size:13px;margin-top:3px}.controls{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px}.table{width:100%;border-collapse:collapse;min-width:800px}.table th,.table td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}.table th{background:#f7f4fc;color:#5e536f;font-size:11px;text-transform:uppercase;letter-spacing:.06em}.table tr:last-child td{border-bottom:0}.clinic-pill{display:inline-block;background:#eee8fc;color:#4f3795;border-radius:999px;padding:5px 8px;font-weight:700;font-size:11px}.empty{text-align:center;padding:34px;color:var(--muted)}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.toolbar h2{font-size:18px;margin:0}.small{font-size:12px;color:var(--muted)}.status{margin-top:10px;font-size:12px;color:var(--muted)}.copy{font-size:11px;padding:7px 9px;background:#f1edf9;color:#4d3986;border:0;border-radius:8px;font-weight:700;cursor:pointer}
+@media(max-width:760px){body{padding:14px}.top{align-items:flex-start}.title{font-size:22px}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.controls{grid-template-columns:1fr 1fr}.card{padding:14px;border-radius:18px}.toolbar{align-items:flex-start;flex-direction:column}.table{min-width:760px}}
+</style>
+</head>
+<body>
+<div id="loginView" class="wrap">
+  <div class="card login">
+    <div class="brand" style="color:var(--ink);margin-bottom:20px"><div class="badge" style="background:#eee8fc;color:#4f3795;border-color:#ddd2f3">PL</div><div><div class="eyebrow" style="color:#756b86">Patient Log</div><div class="title" style="color:var(--ink);font-size:25px">Admin Dashboard</div></div></div>
+    <p class="muted">Sign in with your Supabase admin account to view all clinics and patient records.</p>
+    <div id="loginError" class="error"></div>
+    <form id="loginForm">
+      <div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <button class="btn primary" style="width:100%" type="submit">Sign in</button>
+    </form>
+    <div class="status">Admin access is controlled by Supabase authentication and database policies.</div>
+  </div>
+</div>
+
+<div id="appView" class="hidden">
+<div class="wrap">
+  <div class="top"><div class="brand"><div class="badge">PL</div><div><div class="eyebrow">Patient Log</div><div class="title">Admin Dashboard</div></div></div><button id="logout" class="btn light">Sign out</button></div>
+  <div class="stats"><div class="stat"><div id="clinicCount" class="num">—</div><div class="lbl">Clinics</div></div><div class="stat"><div id="patientCount" class="num">—</div><div class="lbl">Total patients</div></div><div class="stat"><div id="todayCount" class="num">—</div><div class="lbl">Patients today</div></div></div>
+  <div class="card">
+    <div class="toolbar"><div><h2>Patient records</h2><div id="updated" class="small">Loading…</div></div><button id="export" class="btn primary">Export CSV</button></div>
+    <div class="controls"><input id="search" class="field input" placeholder="Search patient, phone, treatment…" style="margin:0;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#faf9fd;font:inherit"><select id="clinicFilter"><option value="">All clinics</option></select><input id="fromDate" type="date" style="padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#faf9fd;font:inherit"><input id="toDate" type="date" style="padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#faf9fd;font:inherit"></div>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Patient</th><th>Phone</th><th>Treatment</th><th>Visit date</th><th>Clinic</th><th>Added</th></tr></thead><tbody id="rows"></tbody></table></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="toolbar"><div><h2>Clinics</h2><div class="small">Copy a clinic's private patient-log link.</div></div></div><div class="table-wrap"><table class="table" style="min-width:620px"><thead><tr><th>Clinic</th><th>Patients</th><th>Clinic link</th></tr></thead><tbody id="clinicRows"></tbody></table></div></div>
+</div>
+</div>
+<script>
+const SUPABASE_URL='https://rucwjtqlvusjkfpuxlfw.supabase.co';
+const SUPABASE_KEY='sb_publishable_Nm9Vx46i_mS0phsNXSmLBA_40mp4YF2';
+let session=null, clinics=[], patients=[];
+const $=id=>document.getElementById(id);
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function showError(msg){$('loginError').textContent=msg;$('loginError').style.display='block'}
+async function authLogin(email,password){const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});const d=await r.json();if(!r.ok)throw new Error(d.error_description||d.msg||'Sign in failed');return d}
+async function query(table,params=''){const r=await fetch(SUPABASE_URL+'/rest/v1/'+table+params,{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+session.access_token}});const t=await r.text();if(!r.ok)throw new Error(t);return t?JSON.parse(t):[]}
+async function load(){
+  clinics=await query('clinics','?select=id,name,token,created_at&order=created_at.desc');
+  patients=await query('patients','?select=id,clinic_id,clinic_name,name,phone,treatment,visit_date,created_at&order=created_at.desc');
+  $('clinicCount').textContent=clinics.length;$('patientCount').textContent=patients.length;
+  const today=new Date().toISOString().slice(0,10);$('todayCount').textContent=patients.filter(p=>p.visit_date===today).length;
+  $('updated').textContent='Updated '+new Date().toLocaleTimeString();
+  $('clinicFilter').innerHTML='<option value="">All clinics</option>'+clinics.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  render();renderClinics();
+}
+function filtered(){const q=$('search').value.trim().toLowerCase(), cid=$('clinicFilter').value, from=$('fromDate').value,to=$('toDate').value;return patients.filter(p=>(!q||[p.name,p.phone,p.treatment,p.clinic_name].join(' ').toLowerCase().includes(q))&&(!cid||p.clinic_id===cid)&&(!from||p.visit_date>=from)&&(!to||p.visit_date<=to));}
+function render(){const data=filtered();$('rows').innerHTML=data.length?data.map(p=>`<tr><td><strong>${esc(p.name)}</strong></td><td>${esc(p.phone)}</td><td>${esc(p.treatment||'—')}</td><td>${esc(p.visit_date)}</td><td><span class="clinic-pill">${esc(p.clinic_name)}</span></td><td>${esc(new Date(p.created_at).toLocaleString())}</td></tr>`).join(''):`<tr><td colspan="6" class="empty">No patient records match your filters.</td></tr>`;}
+function renderClinics(){const counts={};patients.forEach(p=>counts[p.clinic_id]=(counts[p.clinic_id]||0)+1);$('clinicRows').innerHTML=clinics.length?clinics.map(c=>{const link=location.origin+location.pathname.replace(/admin\.html$/,'')+'?t='+encodeURIComponent(c.token);return `<tr><td><strong>${esc(c.name)}</strong></td><td>${counts[c.id]||0}</td><td><button class="copy" data-link="${esc(link)}">Copy clinic link</button></td></tr>`}).join(''):`<tr><td colspan="3" class="empty">No clinics found.</td></tr>`;document.querySelectorAll('[data-link]').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(b.dataset.link);const old=b.textContent;b.textContent='Copied';setTimeout(()=>b.textContent=old,1400)});}
+function csv(){const data=filtered(), header=['Patient','Phone','Treatment','Visit Date','Clinic','Added'];const lines=[header,...data.map(p=>[p.name,p.phone,p.treatment||'',p.visit_date,p.clinic_name,p.created_at])].map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(','));const blob=new Blob([lines.join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='patient-log.csv';a.click();URL.revokeObjectURL(a.href);}
+$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginError').style.display='none';try{session=await authLogin($('email').value,$('password').value);$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');await load();}catch(err){showError(err.message)}};
+$('logout').onclick=()=>{session=null;$('appView').classList.add('hidden');$('loginView').classList.remove('hidden');$('password').value=''};
+['search','clinicFilter','fromDate','toDate'].forEach(id=>$(id).addEventListener('input',render));$('export').onclick=csv;
+</script>
+</body></html>
