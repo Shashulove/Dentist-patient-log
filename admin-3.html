@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patient Log — Admin</title>
+<meta name="theme-color" content="#1b1233">
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{
+  --txt:#f4f0ff;--mut:#b4a9d0;--dim:#8d82aa;--line:rgba(255,255,255,.12);
+  --pur:#7c4dff;--pur2:#9d6bff;--grn:#34d399;--amb:#fbbf24;--red:#f87171;--blue:#60a5fa;
+  --card:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
+  --r:22px;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{
+  margin:0;min-height:100vh;color:var(--txt);
+  font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.4;
+  background:#150e26;
+}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(900px 520px at 85% -8%,#6d3fd0 0%,transparent 60%),
+    radial-gradient(800px 600px at -10% 105%,#4a2a96 0%,transparent 58%),
+    linear-gradient(160deg,#1d1336,#150e26 65%)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+svg{flex:none;display:block}
+a{color:inherit}
+
+/* ---------- buttons & inputs ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--txt);border-radius:14px;padding:10px 16px;font-weight:600;white-space:nowrap;text-decoration:none;transition:background .15s,transform .05s}
+.btn:hover{background:rgba(255,255,255,.13)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:linear-gradient(135deg,#8b5cf6,#6d3fd9);border-color:rgba(255,255,255,.18);box-shadow:0 8px 22px rgba(109,63,217,.35)}
+.btn.primary:hover{background:linear-gradient(135deg,#9a6dff,#7a4de8)}
+.btn.danger{background:rgba(248,113,113,.16);border-color:rgba(248,113,113,.4);color:#fecaca}
+.btn.sm{padding:8px 12px;border-radius:12px;font-size:13px}
+.btn.icon{padding:10px;width:42px;height:42px}
+.btn.icon.sm{padding:0;width:36px;height:36px;border-radius:11px}
+.inp{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);outline:none;min-width:0}
+.inp::placeholder{color:var(--dim)}
+.inp:focus{border-color:var(--pur2);box-shadow:0 0 0 3px rgba(157,107,255,.25)}
+select.inp option{background:#241a40;color:#fff}
+.lbl{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:0 0 7px}
+.field{margin-bottom:16px}
+.err{background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.4);color:#fecaca;padding:10px 12px;border-radius:12px;font-size:13px;margin-bottom:14px}
+
+/* ---------- login ---------- */
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.login{width:100%;max-width:420px;padding:28px;border-radius:26px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(14px);box-shadow:0 24px 70px rgba(8,3,20,.5)}
+.login h1{font-size:24px;margin:16px 0 4px}
+.login p{margin:0 0 22px;color:var(--mut);font-size:14px}
+.pw{position:relative}.pw .inp{padding-right:48px}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;padding:8px;color:var(--mut);border-radius:10px}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;padding:26px 14px 18px;display:flex;flex-direction:column;border-right:1px solid var(--line);background:rgba(18,10,36,.5);backdrop-filter:blur(14px)}
+.brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;margin-bottom:26px}
+.logo{width:62px;height:62px;border-radius:19px;display:grid;place-items:center;background:linear-gradient(145deg,#8b5cf6,#5b34c4);box-shadow:0 10px 28px rgba(109,63,217,.45);border:1px solid rgba(255,255,255,.22)}
+.brand b{font-size:21px;display:block}
+.brand small{color:var(--mut);font-size:14px}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav button{display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:14px;border:0;background:none;color:var(--mut);font-weight:600;text-align:left}
+.nav button:hover{background:rgba(255,255,255,.07);color:var(--txt)}
+.nav button.active{background:linear-gradient(135deg,#8b5cf6,#6a40d6);color:#fff;box-shadow:0 8px 22px rgba(109,63,217,.35)}
+.side-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;display:flex;align-items:center;gap:11px;min-width:0}
+.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:linear-gradient(145deg,#8b5cf6,#5b34c4);flex:none}
+.side-foot div{min-width:0}.side-foot b{display:block;font-size:14px}.side-foot small{display:block;color:var(--mut);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.main{padding:30px clamp(16px,3vw,38px) 90px;min-width:0;width:100%;max-width:1200px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.top h1{margin:0;font-size:clamp(22px,3.4vw,30px);line-height:1.15}
+.top p{margin:6px 0 0;color:var(--mut)}
+.top>div:first-child{flex:1 1 220px;min-width:0}
+.top-actions{display:flex;gap:10px;align-items:center;margin-left:auto}
+.chip{display:inline-flex;align-items:center;gap:9px;padding:10px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.07);font-weight:600;font-size:14px}
+
+.tabs{display:none;grid-template-columns:repeat(4,1fr);gap:6px;padding:5px;margin:0 0 20px;border-radius:18px;background:rgba(18,10,36,.7);border:1px solid var(--line);position:sticky;top:8px;z-index:20;backdrop-filter:blur(14px)}
+.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border:0;border-radius:13px;background:none;color:var(--mut);font-size:12px;font-weight:600}
+.tabs button.active{background:linear-gradient(135deg,#8b5cf6,#6a40d6);color:#fff}
+
+/* ---------- cards ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;backdrop-filter:blur(10px);box-shadow:0 14px 40px rgba(8,3,20,.25)}
+.card+.card,.stats+.card,.grid2+.card,.card+.grid2{margin-top:18px}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.ch .t{display:flex;align-items:center;gap:14px;min-width:0}
+.ch .t>svg{color:var(--pur2)}
+.ch h2{margin:0;font-size:19px}
+.ch small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+.ch .acts{display:flex;gap:10px;flex-wrap:wrap}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
+.stat{position:relative;text-align:left;border-radius:var(--r);padding:20px;border:1px solid var(--line);color:var(--txt);overflow:hidden;transition:transform .12s}
+.stat:hover{transform:translateY(-2px)}
+.stat .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;margin-bottom:14px;color:#fff}
+.stat .num{font-size:34px;font-weight:800;line-height:1}
+.stat .lbl{color:var(--mut);margin-top:6px;font-size:15px}
+.stat.s1{background:linear-gradient(145deg,rgba(139,92,246,.38),rgba(139,92,246,.1))}.s1 .ico{background:#7c4dff}
+.stat.s2{background:linear-gradient(145deg,rgba(96,165,250,.32),rgba(96,165,250,.08))}.s2 .ico{background:#4f7df0}
+.stat.s3{background:linear-gradient(145deg,rgba(52,211,153,.28),rgba(52,211,153,.07))}.s3 .ico{background:#21a77a}
+
+.trend-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.trend-r{text-align:right}
+.trend-r b{font-size:19px;margin-right:8px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(52,211,153,.16);color:#6ee7b7;border:1px solid rgba(52,211,153,.35)}
+.badge.down{background:rgba(248,113,113,.14);color:#fca5a5;border-color:rgba(248,113,113,.35)}
+.badge.flat{background:rgba(255,255,255,.08);color:var(--mut);border-color:var(--line)}
+.trend-r small{display:block;color:var(--dim);font-size:12px;margin-top:4px}
+.chart{width:100%;height:150px;margin-top:6px}
+.chart svg{width:100%;height:100%;overflow:visible}
+
+.grid2{display:grid;grid-template-columns:1fr;gap:18px}
+
+/* ---------- filters ---------- */
+.filters{display:grid;grid-template-columns:2fr 1.3fr 1fr 1fr auto;gap:10px;margin-bottom:12px}
+.sbox{position:relative}.sbox svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--dim);pointer-events:none}.sbox .inp{padding-left:42px}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--mut);font-size:13px;margin:4px 2px 12px}
+
+/* ---------- patient rows ---------- */
+.plist{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:rgba(255,255,255,.025)}
+.prow{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(120px,1fr) minmax(110px,1fr) minmax(110px,1.1fr) minmax(130px,1fr);gap:12px;align-items:center;padding:13px 18px;border-top:1px solid var(--line)}
+.prow.head{border-top:0;background:rgba(255,255,255,.05);color:var(--mut);font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding-top:12px;padding-bottom:12px}
+.pt{display:flex;align-items:center;gap:11px;min-width:0;font-weight:700}
+.pt span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-weight:800;color:#fff;flex:none}
+.ph a{text-decoration:none;color:var(--txt)}.ph a:hover{text-decoration:underline}
+.pill{display:inline-block;padding:4px 12px;border-radius:99px;font-size:13px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p0{background:rgba(96,165,250,.18);color:#bfdbfe;border:1px solid rgba(96,165,250,.35)}
+.p1{background:rgba(157,107,255,.22);color:#ddd0ff;border:1px solid rgba(157,107,255,.4)}
+.p2{background:rgba(52,211,153,.16);color:#a7f3d0;border:1px solid rgba(52,211,153,.35)}
+.p3{background:rgba(251,191,36,.16);color:#fde68a;border:1px solid rgba(251,191,36,.35)}
+.p4{background:rgba(244,114,182,.16);color:#fbcfe8;border:1px solid rgba(244,114,182,.35)}
+.dt{display:flex;align-items:center;gap:8px;white-space:nowrap}.dt svg{color:var(--mut)}
+.ad{color:var(--dim);font-size:12px;margin-top:3px}
+.dtw{min-width:0}.clinic-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{padding:34px 16px;text-align:center;color:var(--mut)}
+.more{display:flex;justify-content:center;margin-top:14px}
+
+/* ---------- clinics ---------- */
+.clist{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:rgba(255,255,255,.025)}
+.crow{display:grid;grid-template-columns:minmax(170px,1.1fr) 70px minmax(0,2fr) auto;gap:14px;align-items:center;padding:14px 18px;border-top:1px solid var(--line)}
+.crow.head{border-top:0;background:rgba(255,255,255,.05);color:var(--mut);font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding-top:12px;padding-bottom:12px}
+.cn{display:flex;align-items:center;gap:12px;min-width:0;font-weight:700}
+.cn small{display:block;color:var(--dim);font-weight:500;font-size:12px}
+.cn .tile{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:rgba(139,92,246,.25);border:1px solid rgba(157,107,255,.4);color:#e0d4ff}
+.cnt{display:inline-grid;place-items:center;min-width:38px;height:30px;padding:0 10px;border-radius:99px;background:rgba(255,255,255,.08);font-weight:700}
+.linkbox{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 13px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--mut);font-size:13px}
+.linkbox span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cact{display:flex;gap:8px;justify-content:flex-end}
+
+/* ---------- reports ---------- */
+.seg{display:inline-flex;padding:4px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.seg button{border:0;background:none;padding:8px 14px;border-radius:10px;color:var(--mut);font-weight:600;font-size:14px}
+.seg button.active{background:linear-gradient(135deg,#8b5cf6,#6a40d6);color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.kpi{padding:16px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.kpi b{display:block;font-size:26px}.kpi span{color:var(--mut);font-size:13px}
+.bars{display:flex;flex-direction:column;gap:13px}
+.bar .bt{display:flex;justify-content:space-between;gap:10px;font-size:14px;margin-bottom:6px}
+.bar .bt span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .bt span:last-child{color:var(--mut);font-weight:700}
+.bar .tr{height:9px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar .tr i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#8b5cf6,#60a5fa)}
+.chart.tall{height:190px}
+
+/* ---------- dialog & toast ---------- */
+dialog{border:1px solid var(--line);border-radius:24px;padding:0;background:#241a40;color:var(--txt);width:min(440px,calc(100vw - 32px));box-shadow:0 30px 80px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(10,5,24,.7);backdrop-filter:blur(4px)}
+.dlg-in{padding:24px}
+.dlg-in h3{margin:0 0 6px;font-size:20px}
+.dlg-in p{margin:0 0 16px;color:var(--mut);font-size:14px}
+.dlg-act{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.toast{position:fixed;left:50%;bottom:78px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#2d2150;border:1px solid var(--line);color:#fff;padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;box-shadow:0 14px 40px rgba(0,0,0,.5);transition:.25s;z-index:100;max-width:calc(100vw - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:#5b1f2a;border-color:rgba(248,113,113,.5)}
+.spin{animation:sp 0.9s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- responsive ---------- */
+@media(max-width:1020px){
+  .filters{grid-template-columns:1fr 1fr}
+  .filters .sbox,.filters #fClinic{grid-column:1/-1}
+  .filters .btn{grid-column:1/-1}
+}
+@media(max-width:860px){
+  .app{display:block}.side{display:none}.tabs{display:grid}
+  .main{padding-top:16px}
+}
+@media(max-width:720px){
+  .stats{grid-template-columns:1fr 1fr;gap:12px}
+  .stats .stat:last-child{grid-column:1/-1}
+  .stat{padding:16px}.stat .num{font-size:30px}
+  .kpis{grid-template-columns:1fr 1fr}.kpis .kpi:last-child{grid-column:1/-1}
+  .card{padding:16px;border-radius:20px}
+  .chip{display:none}
+  .prow.head,.crow.head{display:none}
+  .prow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"pt dt" "ph ph" "tr cl";gap:8px 10px;padding:14px}
+  .prow .pt{grid-area:pt}.prow .dtw{grid-area:dt;text-align:right}.prow .dt{font-size:13px;justify-content:flex-end}.prow .ph{grid-area:ph;color:var(--mut)}
+  .prow .tr{grid-area:tr}.prow .cl{grid-area:cl;text-align:right;color:var(--mut);font-size:13px;min-width:0}
+  .crow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"cn cnt" "lk lk" "ac ac";gap:10px;padding:14px}
+  .crow .cn{grid-area:cn}.crow .cnt-w{grid-area:cnt}.crow .linkbox{grid-area:lk}.crow .cact{grid-area:ac;justify-content:stretch}.crow .cact .btn{flex:1}
+  .toast{bottom:24px}
+}
+@media(max-width:400px){.top-actions .btn .txt{display:none}.top-actions .btn{padding:10px;width:42px}}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginView" class="login-wrap">
+  <form id="loginForm" class="login" autocomplete="on">
+    <div class="logo" id="loginLogo"></div>
+    <h1>Admin sign in</h1>
+    <p>Sign in to see every clinic and patient record.</p>
+    <div id="loginErr" class="err hidden" role="alert"></div>
+    <div class="field"><label class="lbl" for="email">Email</label><input id="email" class="inp" type="email" autocomplete="username" required></div>
+    <div class="field"><label class="lbl" for="password">Password</label>
+      <div class="pw"><input id="password" class="inp" type="password" autocomplete="current-password" required><button type="button" id="pwToggle" aria-label="Show password"></button></div>
+    </div>
+    <button id="loginBtn" class="btn primary" style="width:100%" type="submit">Sign in</button>
+  </form>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appView" class="app hidden">
+  <aside class="side">
+    <div class="brand"><div class="logo" id="sideLogo"></div><div><b>Patient Log</b><small>Admin Portal</small></div></div>
+    <nav class="nav" id="sideNav"></nav>
+    <div class="side-foot"><div class="avatar">A</div><div><b>Admin</b><small id="adminEmail">Super Admin</small></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div><h1 id="pageTitle"></h1><p id="pageSub"></p></div>
+      <div class="top-actions">
+        <div class="chip" id="todayChip"></div>
+        <button class="btn" id="refreshBtn" title="Refresh data"></button>
+        <button class="btn" id="logoutBtn"></button>
+      </div>
+    </header>
+    <nav class="tabs" id="tabs"></nav>
+
+    <!-- Dashboard -->
+    <section id="view-dashboard" class="view">
+      <div class="stats" id="stats"></div>
+      <div class="card">
+        <div class="trend-head">
+          <div class="ch" style="margin:0"><div class="t"><span id="trendIco"></span><div><h2>Patient Trend</h2><small>Patients added (last 7 days)</small></div></div></div>
+          <div class="trend-r" id="trendR"></div>
+        </div>
+        <div class="chart" id="trendChart"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="t"><span class="i-users"></span><div><h2>Recent patients</h2><small>The latest entries from all clinics.</small></div></div>
+          <div class="acts"><button class="btn sm" data-act="goto" data-view="patients">View all</button></div></div>
+        <div id="recentList"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="t"><span class="i-building"></span><div><h2>Clinics</h2><small>Share each clinic's private patient-log link.</small></div></div>
+          <div class="acts"><button class="btn primary sm" data-act="addClinic"><span class="i-plus"></span>Add Clinic</button></div></div>
+        <div id="dashClinics"></div>
+      </div>
+    </section>
+
+    <!-- Patients -->
+    <section id="view-patients" class="view hidden">
+      <div class="card">
+        <div class="ch"><div class="t"><span class="i-users"></span><div><h2>Patient Records</h2><small id="updated">Loading…</small></div></div>
+          <div class="acts"><button class="btn primary sm" id="exportBtn"><span class="i-download"></span>Export CSV</button></div></div>
+        <div class="filters">
+          <div class="sbox"><span class="i-search"></span><input id="fSearch" class="inp" placeholder="Search patient, phone, treatment…" aria-label="Search"></div>
+          <select id="fClinic" class="inp" aria-label="Clinic"><option value="">All clinics</option></select>
+          <input id="fFrom" class="inp" type="date" aria-label="From date" title="From date">
+          <input id="fTo" class="inp" type="date" aria-label="To date" title="To date">
+          <button class="btn" id="fClear">Clear</button>
+        </div>
+        <div class="meta"><span id="countTxt"></span></div>
+        <div id="patientList"></div>
+        <div class="more"><button class="btn hidden" id="moreBtn">Show more</button></div>
+      </div>
+    </section>
+
+    <!-- Clinics -->
+    <section id="view-clinics" class="view hidden">
+      <div class="card">
+        <div class="ch"><div class="t"><span class="i-building"></span><div><h2>Clinics</h2><small>Each clinic has a private link. Anyone with the link can log patients for that clinic.</small></div></div>
+          <div class="acts"><button class="btn primary sm" data-act="addClinic"><span class="i-plus"></span>Add Clinic</button></div></div>
+        <div id="clinicList"></div>
+      </div>
+    </section>
+
+    <!-- Reports -->
+    <section id="view-reports" class="view hidden">
+      <div class="card">
+        <div class="ch"><div class="t"><span class="i-chart"></span><div><h2>Visits over time</h2><small id="rangeTxt"></small></div></div>
+          <div class="acts"><div class="seg" id="seg"><button data-days="7">7 days</button><button data-days="30">30 days</button><button data-days="90">90 days</button></div>
+          <button class="btn sm" id="repExport"><span class="i-download"></span>Export CSV</button></div></div>
+        <div class="kpis" id="kpis"></div>
+        <div class="chart tall" id="barChart"></div>
+      </div>
+      <div class="grid2" style="margin-top:18px">
+        <div class="card" style="margin:0"><div class="ch"><div class="t"><h2>Top treatments</h2></div></div><div class="bars" id="treatBars"></div></div>
+        <div class="card" style="margin:0"><div class="ch"><div class="t"><h2>Patients by clinic</h2></div></div><div class="bars" id="clinicBars"></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg"><div class="dlg-in">
+  <h3 id="dlgTitle"></h3><p id="dlgText"></p>
+  <div id="dlgErr" class="err hidden"></div>
+  <div id="dlgBody"></div>
+  <div class="dlg-act"><button class="btn" id="dlgCancel" type="button">Cancel</button><button class="btn primary" id="dlgOk" type="button">OK</button></div>
+</div></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+var SUPABASE_URL='https://rucwjtqlvusjkfpuxlfw.supabase.co';
+var SUPABASE_KEY='sb_publishable_Nm9Vx46i_mS0phsNXSmLBA_40mp4YF2';
+var SKEY='patientlog_admin_session';
+
+/* ---------- helpers ---------- */
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function svg(d,s){s=s||20;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'}
+var P={
+ home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14c2.5.3 4.5 2.2 4.5 5"/>',
+ building:'<rect x="4" y="3" width="11" height="18" rx="1.5"/><path d="M15 9h4a1 1 0 0 1 1 1v11h-5"/><path d="M8 7h3M8 11h3M8 15h3"/>',
+ chart:'<path d="M5 20V10M12 20V4M19 20v-7"/>',
+ cal:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+ search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/>',
+ download:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+ ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+ out:'<path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9"/>',
+ refresh:'<path d="M20 11a8 8 0 0 0-14-4M4 5v4h4M4 13a8 8 0 0 0 14 4M20 19v-4h-4"/>',
+ link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+ tooth:'<path d="M7 3C4.5 3 3 5 3 7.5c0 2 1 3.5 1.5 5.5.6 2.5.8 7 3 7 1.8 0 1.5-4 3-4h3c1.5 0 1.2 4 3 4 2.200 0 2.400-4.500 3-7 .5-2 1.500-3.500 1.500-5.500C21 5 19.500 3 17 3c-1.800 0-2.500 1-5 1S8.800 3 7 3z"/>',
+ eye:'<path d="M2 12s3.500-7 10-7 10 7 10 7-3.500 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ eyeoff:'<path d="M3 3l18 18M10.600 6.100A9.800 9.800 0 0 1 12 5c6.500 0 10 7 10 7a17 17 0 0 1-3.200 4.100M6.300 6.500C3.800 8.200 2 12 2 12s3.500 7 10 7c1.700 0 3.200-.5 4.500-1.200"/><path d="M9.900 9.900a3 3 0 0 0 4.200 4.200"/>',
+ key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',
+ up:'<path d="M7 17L17 7M9 7h8v8"/>'
+};
+function ic(n,s){return svg(P[n],s)}
+
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function pad(n){return String(n).padStart(2,'0')}
+function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function addDays(d,n){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x}
+function fmtDate(s){var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?m[3]+' '+MON[+m[2]-1]+' '+m[1]:(s||'—')}
+function fmtDT(s){var d=new Date(s);return isNaN(d)?'—':pad(d.getDate())+' '+MON[d.getMonth()]+', '+pad(d.getHours())+':'+pad(d.getMinutes())}
+function fmtPhone(p){var s=String(p||'').replace(/[\s-]/g,''),m=s.match(/^\+91(\d{5})(\d{5})$/);return m?'+91 '+m[1]+' '+m[2]:(p||'—')}
+function hash(s){var h=0;s=String(s||'');for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
+var AVC=['#c2701a','#1f7a4d','#6d4ad8','#0e7490','#be3a7a','#b45309'];
+function av(name){var n=String(name||'?').trim();return '<span class="av" style="background:'+AVC[hash(n.toLowerCase())%AVC.length]+'">'+esc((n[0]||'?').toUpperCase())+'</span>'}
+function pill(t){t=String(t||'').trim();return t?'<span class="pill p'+(hash(t.toLowerCase())%5)+'" title="'+esc(t)+'">'+esc(t)+'</span>':'<span class="ad">—</span>'}
+function clinicLink(token){return new URL('./?t='+encodeURIComponent(token),location.href).href}
+function randToken(){var a=new Uint8Array(32);crypto.getRandomValues(a);return Array.prototype.map.call(a,function(b){return pad(b.toString(16))}).join('')}
+
+/* ---------- state ---------- */
+var session=null,clinics=[],patients=[],view='dashboard',loadedAt=null,rangeDays=7,drawers=[];
+var F={q:'',clinic:'',from:'',to:'',limit:50};
+var TITLES={
+ dashboard:['Welcome back, Admin 👋',"Here's an overview of your clinics and patients."],
+ patients:['Patients','Search, filter and export every patient entry.'],
+ clinics:['Clinics','Add clinics and share their private patient-log links.'],
+ reports:['Reports','See how your clinics are doing over time.']
+};
+
+/* ---------- toast / copy ---------- */
+var toastT;
+function toast(msg,bad){var t=$('#toast');t.textContent=msg;t.className='toast show'+(bad?' bad':'');clearTimeout(toastT);toastT=setTimeout(function(){t.className='toast'+(bad?' bad':'')},bad?4500:2200)}
+function copyText(txt){
+  if(navigator.clipboard&&window.isSecureContext){return navigator.clipboard.writeText(txt)}
+  return new Promise(function(res,rej){var a=document.createElement('textarea');a.value=txt;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy')?res():rej(new Error('copy failed'))}catch(e){rej(e)}document.body.removeChild(a)});
+}
+
+/* ---------- storage + auth ---------- */
+var store={
+ get:function(){try{return JSON.parse(localStorage.getItem(SKEY))}catch(e){return null}},
+ set:function(v){try{localStorage.setItem(SKEY,JSON.stringify(v))}catch(e){}},
+ clear:function(){try{localStorage.removeItem(SKEY)}catch(e){}}
+};
+function saveSession(d){
+  session={access_token:d.access_token,refresh_token:d.refresh_token,
+    expires_at:d.expires_at||Math.floor(Date.now()/1000)+(d.expires_in||3600),
+    email:(d.user&&d.user.email)||(session&&session.email)||''};
+  store.set(session);
+}
+function tokenReq(grant,body){
+  return fetch(SUPABASE_URL+'/auth/v1/token?grant_type='+grant,{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)})
+   .then(function(r){return r.json().catch(function(){return {}}).then(function(d){if(!r.ok)throw new Error(d.error_description||d.msg||d.message||'Sign in failed');return d})});
+}
+function ensureFresh(){
+  if(session&&session.expires_at-60<Date.now()/1000){return tokenReq('refresh_token',{refresh_token:session.refresh_token}).then(saveSession)}
+  return Promise.resolve();
+}
+function api(path,opt,retry){
+  opt=opt||{};if(retry===undefined)retry=true;
+  return ensureFresh().then(function(){
+    return fetch(SUPABASE_URL+path,{method:opt.method||'GET',
+      headers:Object.assign({apikey:SUPABASE_KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},opt.headers||{}),
+      body:opt.body!==undefined?JSON.stringify(opt.body):undefined});
+  }).then(function(r){
+    if(r.status===401&&retry){
+      return tokenReq('refresh_token',{refresh_token:session.refresh_token}).then(saveSession).then(function(){return api(path,opt,false)});
+    }
+    return r.text().then(function(t){
+      var data=null;try{data=t?JSON.parse(t):null}catch(e){data=t}
+      if(!r.ok){var e=new Error((data&&(data.message||data.error_description))||t||('Request failed ('+r.status+')'));e.status=r.status;throw e}
+      return data;
+    });
+  });
+}
+function fetchAll(table,select,order){
+  var out=[];
+  function page(off){return api('/rest/v1/'+table+'?select='+select+'&order='+order+'&limit=1000&offset='+off).then(function(rows){out=out.concat(rows);return rows.length<1000?out:page(off+1000)})}
+  return page(0);
+}
+
+/* ---------- login / logout ---------- */
+function showLogin(msg){
+  $('#appView').classList.add('hidden');$('#loginView').classList.remove('hidden');
+  $('#password').value='';
+  if(msg){var e=$('#loginErr');e.textContent=msg;e.classList.remove('hidden')}
+}
+function showApp(){
+  $('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');
+  $('#adminEmail').textContent=(session&&session.email)||'Super Admin';
+}
+function signOut(msg){
+  session=null;clinics=[];patients=[];store.clear();showLogin(msg);
+}
+function verifyAdmin(){
+  return api('/rest/v1/rpc/is_admin',{method:'POST',body:{}}).then(function(ok){
+    if(ok!==true){throw new Error('This account is not an admin. Add its user ID to the admin_users table.')}
+  });
+}
+$('#loginForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var b=$('#loginBtn'),err=$('#loginErr');err.classList.add('hidden');
+  b.disabled=true;b.textContent='Signing in…';
+  tokenReq('password',{email:$('#email').value.trim(),password:$('#password').value})
+   .then(function(d){saveSession(d);return verifyAdmin()})
+   .then(function(){showApp();setView(viewFromHash());return load()})
+   .catch(function(ex){store.clear();session=null;err.textContent=ex.message;err.classList.remove('hidden')})
+   .then(function(){b.disabled=false;b.textContent='Sign in'});
+});
+$('#pwToggle').addEventListener('click',function(){
+  var p=$('#password'),show=p.type==='password';p.type=show?'text':'password';
+  this.innerHTML=ic(show?'eyeoff':'eye',20);this.setAttribute('aria-label',show?'Hide password':'Show password');
+});
+$('#logoutBtn').addEventListener('click',function(){signOut()});
+
+/* ---------- data ---------- */
+function setBusy(b){var r=$('#refreshBtn');r.disabled=b;r.querySelector('svg').classList.toggle('spin',b)}
+function load(manual){
+  setBusy(true);
+  return Promise.all([
+    fetchAll('clinics','id,name,token,created_at','created_at.desc'),
+    fetchAll('patients','id,clinic_id,clinic_name,name,phone,treatment,visit_date,created_at','created_at.desc')
+  ]).then(function(r){
+    clinics=r[0];patients=r[1];loadedAt=new Date();renderAll();
+    if(manual)toast('Data refreshed');
+  }).catch(function(e){toast(e.message||'Could not load data',true)})
+   .then(function(){setBusy(false)});
+}
+$('#refreshBtn').addEventListener('click',function(){load(true)});
+
+/* ---------- routing ---------- */
+function viewFromHash(){var h=location.hash.replace('#','');return TITLES[h]?h:'dashboard'}
+function setView(v){
+  view=v;
+  $$('.view').forEach(function(s){s.classList.toggle('hidden',s.id!=='view-'+v)});
+  $$('[data-view]').forEach(function(b){b.classList.toggle('active',b.dataset.view===v)});
+  $('#pageTitle').textContent=TITLES[v][0];$('#pageSub').textContent=TITLES[v][1];
+  if(location.hash!=='#'+v)history.replaceState(null,'','#'+v);
+  window.scrollTo(0,0);
+  renderView();
+}
+window.addEventListener('hashchange',function(){if(session&&!$('#appView').classList.contains('hidden'))setView(viewFromHash())});
+
+/* ---------- renderers ---------- */
+function renderAll(){
+  $('#updated').textContent=loadedAt?'Updated '+pad(loadedAt.getHours())+':'+pad(loadedAt.getMinutes())+':'+pad(loadedAt.getSeconds()):'';
+  var sel=$('#fClinic'),cur=F.clinic;
+  sel.innerHTML='<option value="">All clinics</option>'+clinics.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>'}).join('');
+  sel.value=cur;if(sel.value!==cur){F.clinic='';sel.value=''}
+  renderView();
+}
+function renderView(){
+  if(view==='dashboard')renderDashboard();
+  else if(view==='patients')renderPatients();
+  else if(view==='clinics')renderClinics();
+  else renderReports();
+}
+function countsByDay(list,days){
+  var map={},i;for(i=0;i<list.length;i++){var k=list[i].visit_date;map[k]=(map[k]||0)+1}
+  var today=new Date(),out=[],labels=[],keys=[];
+  for(i=days-1;i>=0;i--){var d=addDays(today,-i),k2=iso(d);out.push(map[k2]||0);labels.push(d);keys.push(k2)}
+  return {vals:out,dates:labels,keys:keys};
+}
+function patientRows(list,full){
+  var head='<div class="prow head"><div>Patient</div><div>Phone</div><div>Treatment</div><div>Clinic</div><div>Visit date</div></div>';
+  if(!list.length)return '<div class="plist"><div class="empty">No patient records found.</div></div>';
+  return '<div class="plist'+(full?' full':'')+'">'+head+list.map(function(p){
+    var tel=String(p.phone||'').replace(/[^\d+]/g,'');
+    return '<div class="prow"><div class="pt">'+av(p.name)+'<span class="n">'+esc(p.name)+'</span></div>'+
+      '<div class="ph">'+(tel?'<a href="tel:'+esc(tel)+'">'+esc(fmtPhone(p.phone))+'</a>':'—')+'</div>'+
+      '<div class="tr">'+pill(p.treatment)+'</div>'+
+      '<div class="cl clinic-n">'+esc(p.clinic_name||'—')+'</div>'+
+      '<div class="dtw"><div class="dt">'+ic('cal',16)+esc(fmtDate(p.visit_date))+'</div>'+
+      (full?'<div class="ad">Added '+esc(fmtDT(p.created_at))+'</div>':'')+'</div></div>';
+  }).join('')+'</div>';
+}
+function clinicRows(list){
+  if(!list.length)return '<div class="clist"><div class="empty">No clinics yet. Tap “Add Clinic” to create one.</div></div>';
+  var counts={};patients.forEach(function(p){counts[p.clinic_id]=(counts[p.clinic_id]||0)+1});
+  return '<div class="clist"><div class="crow head"><div>Clinic</div><div>Patients</div><div>Private link</div><div></div></div>'+list.map(function(c){
+    var link=clinicLink(c.token);
+    return '<div class="crow"><div class="cn"><span class="tile">'+ic('tooth',22)+'</span><div style="min-width:0"><span style="display:block;overflow:hidden;text-overflow:ellipsis">'+esc(c.name)+'</span><small>Added '+esc(fmtDate((c.created_at||'').slice(0,10)))+'</small></div></div>'+
+     '<div class="cnt-w"><span class="cnt">'+(counts[c.id]||0)+'</span></div>'+
+     '<div class="linkbox">'+ic('link',16)+'<span>'+esc(link)+'</span></div>'+
+     '<div class="cact"><button class="btn sm" data-act="copy" data-link="'+esc(link)+'">'+ic('copy',16)+'Copy</button>'+
+     '<a class="btn sm" href="'+esc(link)+'" target="_blank" rel="noopener">'+ic('ext',16)+'Open</a>'+
+     '<button class="btn sm" data-act="regen" data-id="'+esc(c.id)+'" title="Make a new link and disable the old one">'+ic('key',16)+'New link</button></div></div>';
+  }).join('')+'</div>';
+}
+function renderDashboard(){
+  var todayKey=iso(new Date()),todayN=patients.filter(function(p){return p.visit_date===todayKey}).length;
+  $('#stats').innerHTML=
+   '<button class="stat s1" data-act="goto" data-view="clinics"><div class="ico">'+ic('building',24)+'</div><div class="num">'+clinics.length+'</div><div class="lbl">Total Clinics</div></button>'+
+   '<button class="stat s2" data-act="goto" data-view="patients"><div class="ico">'+ic('users',24)+'</div><div class="num">'+patients.length+'</div><div class="lbl">Total Patients</div></button>'+
+   '<button class="stat s3" data-act="today"><div class="ico">'+ic('cal',24)+'</div><div class="num">'+todayN+'</div><div class="lbl">Patients Today</div></button>';
+  var c14=countsByDay(patients,14),cur=c14.vals.slice(7),prev=c14.vals.slice(0,7);
+  var sc=cur.reduce(function(a,b){return a+b},0),sp=prev.reduce(function(a,b){return a+b},0);
+  var badge;
+  if(sp===0&&sc===0)badge='<span class="badge flat">no change</span>';
+  else if(sp===0)badge='<span class="badge">'+ic('up',13)+'new</span>';
+  else{var pc=Math.round((sc-sp)/sp*100);badge='<span class="badge'+(pc<0?' down':pc===0?' flat':'')+'">'+(pc>0?ic('up',13):'')+(pc>0?'+':'')+pc+'%</span>'}
+  $('#trendR').innerHTML='<b>'+sc+' patient'+(sc===1?'':'s')+'</b>'+badge+'<small>vs previous 7 days</small>';
+  var sorted=patients.slice().sort(function(a,b){return String(b.created_at).localeCompare(String(a.created_at))});
+  $('#recentList').innerHTML=patientRows(sorted.slice(0,5),false);
+  $('#dashClinics').innerHTML=clinicRows(clinics.slice(0,5))+(clinics.length>5?'<div class="more"><button class="btn sm" data-act="goto" data-view="clinics">See all '+clinics.length+' clinics</button></div>':'');
+  drawLine($('#trendChart'),cur,c14.dates.slice(7));
+}
+function filtered(){
+  var q=F.q.trim().toLowerCase();
+  return patients.filter(function(p){
+    return (!q||[p.name,p.phone,p.treatment,p.clinic_name].join(' ').toLowerCase().indexOf(q)!==-1)&&
+      (!F.clinic||p.clinic_id===F.clinic)&&(!F.from||p.visit_date>=F.from)&&(!F.to||p.visit_date<=F.to);
+  }).sort(function(a,b){return String(b.visit_date).localeCompare(String(a.visit_date))||String(b.created_at).localeCompare(String(a.created_at))});
+}
+function renderPatients(){
+  var all=filtered(),shown=all.slice(0,F.limit);
+  $('#patientList').innerHTML=patientRows(shown,true);
+  $('#countTxt').textContent=all.length===patients.length?(all.length+' record'+(all.length===1?'':'s')):('Showing '+all.length+' of '+patients.length+' records');
+  var more=$('#moreBtn');more.classList.toggle('hidden',all.length<=F.limit);
+  more.textContent='Show more ('+(all.length-F.limit)+' left)';
+  $('#exportBtn').disabled=!all.length;
+}
+function renderClinics(){$('#clinicList').innerHTML=clinicRows(clinics)}
+function renderReports(){
+  $$('#seg button').forEach(function(b){b.classList.toggle('active',+b.dataset.days===rangeDays)});
+  var c=countsByDay(patients,rangeDays),total=c.vals.reduce(function(a,b){return a+b},0);
+  var maxV=Math.max.apply(null,c.vals),bi=c.vals.indexOf(maxV);
+  $('#rangeTxt').textContent=fmtDate(c.keys[0])+' – '+fmtDate(c.keys[c.keys.length-1]);
+  $('#kpis').innerHTML=
+   '<div class="kpi"><b>'+total+'</b><span>Patients in range</span></div>'+
+   '<div class="kpi"><b>'+(total/rangeDays).toFixed(1)+'</b><span>Average per day</span></div>'+
+   '<div class="kpi"><b>'+(maxV?esc(fmtDate(c.keys[bi]).slice(0,6)):'—')+'</b><span>Busiest day'+(maxV?' ('+maxV+')':'')+'</span></div>';
+  drawBars($('#barChart'),c.vals,c.dates);
+  var inRange=patients.filter(function(p){return p.visit_date>=c.keys[0]&&p.visit_date<=c.keys[c.keys.length-1]});
+  var tm={};inRange.forEach(function(p){var t=String(p.treatment||'').trim();if(!t)return;var k=t.toLowerCase();(tm[k]=tm[k]||{n:t,c:0}).c++});
+  var tl=Object.keys(tm).map(function(k){return tm[k]}).sort(function(a,b){return b.c-a.c}).slice(0,6);
+  $('#treatBars').innerHTML=barList(tl.map(function(x){return [x.n,x.c]}));
+  var cm={};inRange.forEach(function(p){var n=p.clinic_name||'Unknown';cm[n]=(cm[n]||0)+1});
+  $('#clinicBars').innerHTML=barList(Object.keys(cm).map(function(k){return [k,cm[k]]}).sort(function(a,b){return b[1]-a[1]}));
+}
+function barList(rows){
+  if(!rows.length)return '<div class="empty" style="padding:18px">No data in this range.</div>';
+  var m=Math.max.apply(null,rows.map(function(r){return r[1]}));
+  return rows.map(function(r){return '<div class="bar"><div class="bt"><span>'+esc(r[0])+'</span><span>'+r[1]+'</span></div><div class="tr"><i style="width:'+Math.max(4,Math.round(r[1]/m*100))+'%"></i></div></div>'}).join('');
+}
+
+/* ---------- charts (plain SVG) ---------- */
+var gid=0;
+function drawLine(el,vals,dates){
+  if(!el||!el.clientWidth)return;
+  var w=el.clientWidth,h=el.clientHeight,pl=14,pr=14,pt=14,pb=28,n=vals.length,max=Math.max(1,Math.max.apply(null,vals));
+  var X=function(i){return pl+(n===1?0:i*(w-pl-pr)/(n-1))},Y=function(v){return pt+(h-pt-pb)*(1-v/max)};
+  var pts=vals.map(function(v,i){return [X(i),Y(v)]}),lo=pt,hi=h-pb;
+  var cl=function(v){return Math.min(hi,Math.max(lo,v))};
+  var d='M'+pts[0][0]+' '+pts[0][1];
+  for(var i=0;i<n-1;i++){
+    var p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+    d+=' C'+(p1[0]+(p2[0]-p0[0])/6)+' '+cl(p1[1]+(p2[1]-p0[1])/6)+' '+(p2[0]-(p3[0]-p1[0])/6)+' '+cl(p2[1]-(p3[1]-p1[1])/6)+' '+p2[0]+' '+p2[1];
+  }
+  var id='g'+(++gid),area=d+' L'+X(n-1)+' '+hi+' L'+X(0)+' '+hi+' Z';
+  var grid=[0,.5,1].map(function(f){var y=pt+(hi-pt)*f;return '<line x1="'+pl+'" x2="'+(w-pr)+'" y1="'+y+'" y2="'+y+'" stroke="rgba(255,255,255,.08)"/>'}).join('');
+  var labels=dates.map(function(dt,i){return '<text x="'+X(i)+'" y="'+(h-6)+'" text-anchor="middle" fill="#8d82aa" font-size="11">'+DOW[dt.getDay()]+'</text>'}).join('');
+  var dots=pts.map(function(p,i){return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4.5" fill="#fff" stroke="#9d6bff" stroke-width="2"><title>'+fmtDate(iso(dates[i]))+': '+vals[i]+'</title></circle>'}).join('');
+  el.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" role="img" aria-label="Patients per day"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9d6bff" stop-opacity=".45"/><stop offset="1" stop-color="#9d6bff" stop-opacity="0"/></linearGradient></defs>'+
+    grid+'<path d="'+area+'" fill="url(#'+id+')"/><path d="'+d+'" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>'+dots+labels+'</svg>';
+}
+function drawBars(el,vals,dates){
+  if(!el||!el.clientWidth)return;
+  var w=el.clientWidth,h=el.clientHeight,pl=26,pr=6,pt=12,pb=26,n=vals.length,max=Math.max(1,Math.max.apply(null,vals));
+  var slot=(w-pl-pr)/n,bw=Math.max(2,Math.min(34,slot*.68)),hi=h-pb;
+  var Y=function(v){return pt+(hi-pt)*(1-v/max)};
+  var step=n<=7?1:n<=30?5:15;
+  var grid=[0,.5,1].map(function(f){var y=pt+(hi-pt)*f,v=Math.round(max*(1-f));return '<line x1="'+pl+'" x2="'+(w-pr)+'" y1="'+y+'" y2="'+y+'" stroke="rgba(255,255,255,.08)"/><text x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end" fill="#8d82aa" font-size="10">'+v+'</text>'}).join('');
+  var bars=vals.map(function(v,i){
+    var x=pl+slot*i+(slot-bw)/2,y=Y(v),bh=Math.max(v?2:0,hi-y),
+        lab=(i%step===0||i===n-1)?'<text x="'+(x+bw/2)+'" y="'+(h-8)+'" text-anchor="middle" fill="#8d82aa" font-size="10">'+(n<=7?DOW[dates[i].getDay()]:dates[i].getDate()+' '+MON[dates[i].getMonth()])+'</text>':'';
+    return '<rect x="'+x+'" y="'+(hi-bh)+'" width="'+bw+'" height="'+bh+'" rx="'+Math.min(5,bw/2)+'" fill="url(#bg'+'1)"><title>'+fmtDate(iso(dates[i]))+': '+v+'</title></rect>'+lab;
+  }).join('');
+  el.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" role="img" aria-label="Patients per day"><defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#6d3fd9"/></linearGradient></defs>'+grid+bars+'</svg>';
+}
+var rT;window.addEventListener('resize',function(){clearTimeout(rT);rT=setTimeout(function(){if(session&&view==='dashboard')renderDashboard();if(session&&view==='reports')renderReports()},120)});
+
+/* ---------- dialog ---------- */
+function ask(o){
+  var d=$('#dlg'),ok=$('#dlgOk'),cancel=$('#dlgCancel'),err=$('#dlgErr');
+  $('#dlgTitle').textContent=o.title;$('#dlgText').textContent=o.text||'';$('#dlgBody').innerHTML=o.html||'';
+  err.classList.add('hidden');ok.textContent=o.ok||'OK';ok.className='btn '+(o.danger?'danger':'primary');ok.disabled=false;
+  function close(){d.close()}
+  ok.onclick=function(){
+    ok.disabled=true;err.classList.add('hidden');
+    Promise.resolve().then(function(){return o.onOk?o.onOk():true}).then(function(r){
+      if(r===false){ok.disabled=false;return}
+      close();
+    }).catch(function(e){ok.disabled=false;err.textContent=e.message||String(e);err.classList.remove('hidden')});
+  };
+  cancel.onclick=close;
+  d.showModal();
+  var f=$('#dlgBody input');if(f)setTimeout(function(){f.focus()},30);
+}
+
+/* ---------- actions ---------- */
+function addClinic(){
+  ask({title:'Add clinic',text:'A private link is created automatically. Share it only with that clinic.',
+    html:'<label class="lbl" for="newName">Clinic name</label><input id="newName" class="inp" maxlength="80" placeholder="e.g. Smile Care Dental" autocomplete="off">',
+    ok:'Create clinic',
+    onOk:function(){
+      var name=$('#newName').value.trim();
+      if(name.length<2)throw new Error('Please enter the clinic name.');
+      return api('/rest/v1/clinics',{method:'POST',headers:{Prefer:'return=representation'},body:{name:name,token:randToken()}}).then(function(rows){
+        var row=rows&&rows[0];if(!row)throw new Error('Clinic was not saved. Run ADMIN_SETUP_V2.sql in Supabase first.');
+        clinics.unshift(row);renderAll();toast('Clinic created — copy its link below');
+      }).catch(function(e){
+        if(e.status===401||e.status===403||/row-level security|permission/i.test(e.message))throw new Error('Not allowed yet. Run ADMIN_SETUP_V2.sql in the Supabase SQL editor, then try again.');
+        throw e;
+      });
+    }});
+  $('#newName').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('#dlgOk').click()}});
+}
+function regen(id){
+  var c=clinics.filter(function(x){return x.id===id})[0];if(!c)return;
+  ask({title:'Make a new link?',text:'“'+c.name+'” will stop working on its current link and phones using it will need the new one.',ok:'Make new link',danger:true,
+    onOk:function(){
+      return api('/rest/v1/clinics?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=representation'},body:{token:randToken()}}).then(function(rows){
+        if(!rows||!rows.length)throw new Error('Not allowed yet. Run ADMIN_SETUP_V2.sql in the Supabase SQL editor, then try again.');
+        c.token=rows[0].token;renderAll();toast('New link ready — copy and send it');
+      });
+    }});
+}
+function csvCell(v){
+  var s=String(v==null?'':v);
+  if(/^[=@\t\r]/.test(s)||(/^[+\-]/.test(s)&&!/^[+\-]?[\d\s]+$/.test(s)))s="'"+s;
+  return '"'+s.replace(/"/g,'""')+'"';
+}
+function exportCSV(list,name){
+  if(!list.length){toast('Nothing to export',true);return}
+  var rows=[['Patient','Phone','Treatment','Visit Date','Clinic','Added']].concat(list.map(function(p){return [p.name,p.phone,p.treatment||'',p.visit_date,p.clinic_name,p.created_at]}));
+  var blob=new Blob(['﻿'+rows.map(function(r){return r.map(csvCell).join(',')}).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name+'-'+iso(new Date())+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href)},1000);toast('Exported '+list.length+' record'+(list.length===1?'':'s'));
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-act],[data-view],[data-days]');if(!t)return;
+  if(t.dataset.view&&!t.dataset.act){setView(t.dataset.view);return}
+  if(t.dataset.days){rangeDays=+t.dataset.days;renderReports();return}
+  var a=t.dataset.act;
+  if(a==='goto')setView(t.dataset.view);
+  else if(a==='today'){F={q:'',clinic:'',from:iso(new Date()),to:iso(new Date()),limit:50};syncFilters();setView('patients')}
+  else if(a==='copy')copyText(t.dataset.link).then(function(){toast('Link copied')}).catch(function(){toast('Could not copy — press and hold the link instead',true)});
+  else if(a==='addClinic')addClinic();
+  else if(a==='regen')regen(t.dataset.id);
+});
+
+/* filters */
+function syncFilters(){$('#fSearch').value=F.q;$('#fClinic').value=F.clinic;$('#fFrom').value=F.from;$('#fTo').value=F.to}
+$('#fSearch').addEventListener('input',function(){F.q=this.value;F.limit=50;renderPatients()});
+$('#fClinic').addEventListener('change',function(){F.clinic=this.value;F.limit=50;renderPatients()});
+$('#fFrom').addEventListener('change',function(){F.from=this.value;F.limit=50;renderPatients()});
+$('#fTo').addEventListener('change',function(){F.to=this.value;F.limit=50;renderPatients()});
+$('#fClear').addEventListener('click',function(){F={q:'',clinic:'',from:'',to:'',limit:50};syncFilters();renderPatients()});
+$('#moreBtn').addEventListener('click',function(){F.limit+=50;renderPatients()});
+$('#exportBtn').addEventListener('click',function(){exportCSV(filtered(),'patient-log')});
+$('#repExport').addEventListener('click',function(){var c=countsByDay(patients,rangeDays);exportCSV(patients.filter(function(p){return p.visit_date>=c.keys[0]&&p.visit_date<=c.keys[c.keys.length-1]}),'patient-log-'+rangeDays+'d')});
+
+/* ---------- static icons + nav ---------- */
+function paintStatic(){
+  var NAV=[['dashboard','home','Dashboard'],['patients','users','Patients'],['clinics','building','Clinics'],['reports','chart','Reports']];
+  $('#sideNav').innerHTML=NAV.map(function(n){return '<button data-view="'+n[0]+'">'+ic(n[1],22)+'<span>'+n[2]+'</span></button>'}).join('');
+  $('#tabs').innerHTML=NAV.map(function(n){return '<button data-view="'+n[0]+'">'+ic(n[1],21)+'<span>'+n[2]+'</span></button>'}).join('');
+  $('#loginLogo').innerHTML=ic('tooth',30);$('#sideLogo').innerHTML=ic('tooth',32);
+  $('#pwToggle').innerHTML=ic('eye',20);
+  $('#refreshBtn').innerHTML=ic('refresh',18)+'<span class="txt">Refresh</span>';
+  $('#logoutBtn').innerHTML=ic('out',18)+'<span class="txt">Sign out</span>';
+  $$('.i-users').forEach(function(e){e.innerHTML=ic('users',28)});
+  $$('.i-building').forEach(function(e){e.innerHTML=ic('building',28)});
+  $$('.i-chart').forEach(function(e){e.innerHTML=ic('chart',28)});
+  $$('.i-plus').forEach(function(e){e.innerHTML=ic('plus',18)});
+  $$('.i-download').forEach(function(e){e.innerHTML=ic('download',18)});
+  $$('.i-search').forEach(function(e){e.innerHTML=ic('search',18)});
+  $('#trendIco').innerHTML=ic('chart',28);$('#trendIco').style.color='#9d6bff';
+  var d=new Date();$('#todayChip').innerHTML=ic('cal',18)+pad(d.getDate())+' '+MON[d.getMonth()]+' '+d.getFullYear();
+}
+
+/* ---------- boot ---------- */
+paintStatic();
+(function boot(){
+  var s=store.get();
+  if(!s||!s.refresh_token){showLogin();return}
+  session=s;
+  ensureFresh().then(verifyAdmin).then(function(){showApp();setView(viewFromHash());return load()})
+   .catch(function(e){
+     if(e&&e.status===undefined&&/fetch|network/i.test(e.message||'')){showApp();setView(viewFromHash());toast('You appear to be offline',true);return}
+     signOut(/not an admin/.test(e.message)?e.message:'Please sign in again.');
+   });
+})();
+})();
+</script>
+</body>
+</html>
